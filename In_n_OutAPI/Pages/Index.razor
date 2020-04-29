@@ -1,0 +1,80 @@
+﻿@page "/"
+@using In_n_OutAPI.Data
+@using Newtonsoft.Json;
+@inject HttpClient http;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chamando minha API</title>
+ 
+    <style>
+        table, th, td {
+            border: 2px solid grey;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            text-align: left;
+        }
+
+        th {
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: lightgray;
+        }
+    </style>
+</head>
+<body>
+    <button class="btn btn-primary" @onclick="GetAluno">Carregar Alunos</button>
+    <br />
+
+    <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nome</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Alunos)
+            {
+                <tr>
+                    <td>@a.Id</td>
+                    <td>@a.Nome</td>
+                    <td>@a.email</td>
+                     <td><button class="btn btn-danger deleteBtn" @onclick="(()=>DeleteAluno(a))">Deletar</button></td>  
+                </tr>
+            }
+        </tbody>
+    </table>
+</body>
+</html>
+    @code{
+        Aluno alunos = new Aluno();
+        List<Aluno> Alunos = new List<Aluno>();
+
+        private async Task GetAluno()
+        {
+            string uri = "https://localhost:44369/api/aluno";
+
+            using (var cliente = new HttpClient())
+            {
+                HttpResponseMessage resposta = await cliente.GetAsync(uri);
+                string json = await resposta.Content.ReadAsStringAsync();
+                Alunos = JsonConvert.DeserializeObject<List<Aluno>>(json);
+
+            }
+        }
+
+        private async Task DeleteAluno(Aluno aluno)
+        {
+            await http.DeleteAsync("https://localhost:44369/api/aluno/" + aluno.Id);
+            Alunos.RemoveAll(x => x.Id == aluno.Id);
+        }
+
+    }

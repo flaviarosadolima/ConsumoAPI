@@ -1,0 +1,158 @@
+﻿@page "/correios"
+
+@using In_n_OutAPI.Data;
+@using Newtonsoft.Json;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buscar por CEP</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            padding-top: 1.5px;
+        }
+
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .form-blazor {
+            width: 700px;
+            margin-left: 50%;
+            transform: translateX(-70%);
+            height: 500px;
+            margin-top: initial;
+            border-radius: 17px;
+            background-color: #a5a5aa;
+            position: absolute;
+        }
+
+        .inputs-blazor {
+            margin-top: 9%;
+            width: 70%;
+            margin-left: 50%;
+            transform: translateX(-50%);
+            position: absolute;
+        }
+
+        #input-only-line {
+            width: 70%;
+            float: left;
+        }
+
+        .content-recovery {
+            margin-top: 15%;
+            position: relative;
+        }
+
+        .input-data-recovery {
+            width: 100%;
+            margin-top: 5%;
+            margin-left: 50%;
+            transform: translateX(-50%);
+            float: left;
+        }
+
+        .input-data-recovery-mid {
+            width: 45%;
+            float: left;
+            margin-top: 5%;
+        }
+
+        .input-space {
+            margin-left: 10%;
+        }
+
+        button {
+            float: left;
+            margin-left: 5%;
+        }
+
+        .btn-clear-blazor {
+            margin-left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .cep-list {
+            height: 84vh;
+            background-color: #a5a5aa;
+            width: 200px;
+            height: 500px;
+            overflow-y: scroll;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="form-blazor">
+        <div class="inputs-blazor">
+            <p>Digite um CEP (Somente Números)</p>
+            <input @bind="CEPinfo.CEP" class="form-control" id="input-only-line" />
+            <button @onclick="GET_info" type="button" class="btn btn-primary mb-2">Buscar por CEP</button>
+
+
+            <div class="content-recovery">
+                <input @bind="CEPinfo.CEP" class="form-control input-data-recovery-mid" readonly placeholder="CEP..." />
+                <input @bind="CEPinfo.Localidade" class="form-control input-data-recovery-mid" readonly placeholder="Localidade..." />
+                <input @bind="CEPinfo.Uf" class="form-control input-data-recovery-mid input-space" readonly placeholder="Unidade Federativa..." />
+                <input @bind="CEPinfo.Logradouro" class="form-control input-data-recovery" readonly placeholder="Logradouro..." />
+                <input @bind="CEPinfo.Bairro" class="form-control input-data-recovery" readonly placeholder="Bairro...." />
+            </div>
+        </div>
+
+    </div>
+
+    <div class="cep-list">
+        <img src="/images/mailpigeons.jpg" height="200" width="200" />
+        <center>
+            <br /><br />
+            <button @onclick="CleanList" class="btn btn-danger btn-clear-blazor">Limpar</button>
+            <br /><br />
+            @foreach (var cep in CEPlist)
+            {
+                <br />
+                <br />
+                @cep
+
+            }
+        </center>
+    </div>
+
+
+</body>
+</html>
+
+@code{
+    Endereco CEPinfo = new Endereco();
+    List<string> CEPlist = new List<string>();
+
+    private async void GET_info()
+    {
+        string porcep = "https://viacep.com.br/ws/" + CEPinfo.CEP + "/json";
+
+        using (var cliente = new HttpClient())
+        {
+            HttpResponseMessage resposta = await cliente.GetAsync(porcep);
+            string json = await resposta.Content.ReadAsStringAsync();
+            CEPinfo = JsonConvert.DeserializeObject<Endereco>(json);
+
+            CEPinfo.CEP = CEPinfo.CEP.Replace("-", "");
+            CEPlist.Add(CEPinfo.CEP);
+
+        }
+
+    }
+
+    private void CleanList()
+    {
+        CEPinfo.CEP = string.Empty;
+        CEPinfo.Bairro = string.Empty;
+        CEPinfo.Localidade = string.Empty;
+        CEPinfo.Logradouro = string.Empty;
+        CEPinfo.Uf = string.Empty;
+        CEPlist.Clear();
+    }
+}
